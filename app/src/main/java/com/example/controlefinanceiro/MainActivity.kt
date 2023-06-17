@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -22,12 +23,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.controlefinanceiro.ui.theme.ControleFinanceiroTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
+
+class MyViewModel : ViewModel(){
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState
+
+    fun add(transacao: String){
+        val transacoesLista = _uiState.value.transacoesLista.toMutableList()
+        transacoesLista.add(transacao)
+        _uiState.value = UiState(transacoesLista = transacoesLista)
+    }
+    data class UiState(
+        val transacoesLista: List<String> = emptyList()
+    )
+}
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,21 +64,30 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Transacoes(){
-    LazyColumn(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth(),
-        contentPadding = PaddingValues(8.dp)
-    ){
-        items(transacoesLista.size){index ->
-            Transacao(index)
+fun Transacoes(viewModel: MyViewModel = viewModel()){
+    val uiState by viewModel.uiState.collectAsState()
+    Column() {
+        LazyColumn(
+            modifier = Modifier
+                .padding(16.dp)
+                .weight(1f)
+                .fillMaxWidth(),
+            contentPadding = PaddingValues(8.dp)
+        ){
+            items(uiState.transacoesLista.size){index ->
+                Transacao(uiState.transacoesLista[index])
+            }
+        }
+        Button(onClick = {
+            viewModel.add("Nova Transação")
+        }) {
+            Text(text = "Adicionar nova transação")
         }
     }
 }
 
 @Composable
-private fun Transacao(index: Int) {
+private fun Transacao(transacao: String) {
     Card(
         elevation = CardDefaults.cardElevation(8.dp),
         modifier = Modifier
@@ -71,7 +101,7 @@ private fun Transacao(index: Int) {
             )
             Spacer(modifier = Modifier.padding(16.dp))
             Text(
-                text = transacoesLista[index],
+                text = transacao,
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth(),
@@ -97,17 +127,3 @@ fun BemVindo(){
         )
     }
 }
-
-private val transacoesLista = listOf<String>(
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira",
-    "Café", "Aluguel", "Academia", "Feira"
-)
